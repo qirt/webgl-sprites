@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <style>
+        body {
+            background: #000;
+            border: 0px;
+            padding: 0px;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+    <script type="x-shader/x-vertex" id="default-vs">
+        varying vec2 vUv;
+        void main()
+        {
+            vUv = vec2(uv.x, uv.y);
+	        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="default-fs">
+        uniform sampler2D texture;
+        varying vec2 vUv;
+        void main() {
+            gl_FragColor = texture2D(texture1, vUv);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="sprite-fs">
+        uniform sampler2D texture;
+        uniform float frames[8];
+        uniform int length;
+        uniform float num;
+        varying vec2 vUv;
+        void main() {
+            vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+            vec4 ncolor = vec4(0.0, 0.0, 0.0, 0.0);
+            for (int i = 0; i < 8; i++) {
+                if (i == length) break;
+                ncolor = texture2D(texture, vec2((frames[i] / num) + vUv.x / num, vUv.y));
+                color = mix(color, ncolor, ncolor.a);
+            }
+            gl_FragColor = color;
+        }
+    </script>
+    <script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../src/scene.js"></script>
+    <script type="text/javascript" src="../src/resource.js"></script>
+    <script type="text/javascript" src="../src/sprite.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+        var t = 0;
+        var scene = new Scene();
+        var bg = new Sprite(140, 100, new Resource('images/space.jpg', 1), -100);
+        var texture = new Resource('images/fc1_sprite.png', 5);
+        var sprite1 = new Sprite(0.2, 0.2, texture);
+        var sprite2 = new Sprite(0.2, 0.2, texture);
+        scene.add(bg);
+        scene.add(sprite1);
+        scene.add(sprite2);
+        sprite2.startAnimation([0, [3, 2], 4], 0.5);
+        scene.subscribe(function (delta) {
+            t += delta;
+            sprite1.showFrames(Math.floor(t) % 2);
+            sprite1.translate(Math.cos(scene.clock.getElapsedTime() / 4), Math.sin(scene.clock.getElapsedTime() / 4));
+            sprite1.rotate(scene.clock.getElapsedTime() / 4);
+            sprite2.translate(Math.cos(scene.clock.getElapsedTime() / 4 + 1) * 1.5, Math.sin(scene.clock.getElapsedTime() / 4 + 1) * 1.5);
+            sprite2.rotate(scene.clock.getElapsedTime() / 4 + 1);
+            scene.follow(sprite1);
+        });
+        scene.start();
+    </script>
+</body>
+</html>
